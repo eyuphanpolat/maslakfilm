@@ -55,8 +55,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCe4Re_V4fuINZVjCTQw5R6QE_0H98sfW8',
-    appId: '1:722338354655:ios:676f0b9887afc39283a06a',
+    apiKey: 'Google API Key',
+    appId: 'FİREBASE APP İD ',
     messagingSenderId: '722338354655',
     projectId: 'maslakfilm-f479b',
     storageBucket: 'maslakfilm-f479b.firebasestorage.app',
