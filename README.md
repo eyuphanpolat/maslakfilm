@@ -21,29 +21,10 @@ Maslak Film Ekipman Takip Sistemi, film prodüksiyon şirketlerinin kamera, lens
 - **Mobile Scanner** - QR kod tarama
 - **Shared Preferences** - Local storage
 
-## 📦 Kurulum
-
-```bash
-# Bağımlılıkları yükle
-flutter pub get
-
-# Web'de çalıştır
-flutter run -d chrome
-
-# Production build
-flutter build web --release
-```
-
-## 🚀 Deployment
 
 ### Firebase Hosting
 
-```bash
-# Firebase'e deploy et
-firebase deploy --only hosting
-```
 
-**Canlı URL:** https://maslakfilm-f479b.web.app
 
 ## 📱 Platform Desteği
 
@@ -60,19 +41,9 @@ firebase deploy --only hosting
 - Firestore Security Rules ile veri güvenliği
 - HTTPS desteği
 
+**Canlı URL:** https://maslakfilm-f479b.web.app
+
 ## 👨‍💻 Geliştirici
 
 **Eyüphan Polat**  
 Bilgisayar Mühendisi | Web & Yazılım Geliştirici
-
-## 📄 Lisans
-
-Bu proje özel bir projedir.
-
-## 🤝 Katkıda Bulunma
-
-Pull request'ler kabul edilir. Büyük değişiklikler için lütfen önce bir issue açın.
-
-## 📧 İletişim
-
-Sorularınız için issue açabilirsiniz.
