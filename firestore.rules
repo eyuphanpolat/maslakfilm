@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // MVP: Tüm koleksiyonlar için sadece oturum açmış kullanıcıya izin ver
+    match /{document=**} {
+      allow read, write: if isSignedIn();
+    }
+
+    // İleri aşama: Koleksiyon bazlı daha sıkı kurallar burada tanımlanacak
+    // match /equipment/{id} { ... }
+    // match /rentals/{id} { ... }
+    // match /maintenance/{id} { ... }
+    // match /customers/{id} { ... }
+    // match /users/{uid} { ... }
+  }
+}
+
+

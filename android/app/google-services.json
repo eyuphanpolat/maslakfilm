@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722338354655",
+    "project_id": "maslakfilm-f479b",
+    "storage_bucket": "maslakfilm-f479b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722338354655:android:b58f8396178fefd183a06a",
+        "android_client_info": {
+          "package_name": "com.maslakfilm.ets"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDouH4_UpJ2EDbWsmwZtkrUGsQ-7mO1V5k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

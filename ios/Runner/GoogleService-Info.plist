@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCe4Re_V4fuINZVjCTQw5R6QE_0H98sfW8</string>
+	<key>GCM_SENDER_ID</key>
+	<string>722338354655</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.maslakfilm.ets</string>
+	<key>PROJECT_ID</key>
+	<string>maslakfilm-f479b</string>
+	<key>STORAGE_BUCKET</key>
+	<string>maslakfilm-f479b.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:722338354655:ios:676f0b9887afc39283a06a</string>
+</dict>
+</plist>

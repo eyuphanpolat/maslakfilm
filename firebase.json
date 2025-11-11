@@ -1,0 +1,47 @@
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "maslakfilm-f479b",
+          "appId": "1:722338354655:android:b58f8396178fefd183a06a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "maslakfilm-f479b",
+          "configurations": {
+            "android": "1:722338354655:android:b58f8396178fefd183a06a",
+            "ios": "1:722338354655:ios:676f0b9887afc39283a06a"
+          }
+        }
+      }
+    }
+  }
+}
