@@ -1,35 +1,78 @@
-🎬 Maslak Film Ekipman Takip Sistemi (MF-ETS)
+# 🎬 Maslak Film Ekipman Takip Sistemi (MF-ETS)
 
-Maslak Film Ekipman Takip Sistemi, film prodüksiyon şirketlerinin kamera, lens, ışık ve diğer ekipmanlarını kolayca takip edebilmesi için geliştirilmiş bir masaüstü uygulamasıdır.
-Bu sistem sayesinde hangi ekipmanın kimde olduğu, bakımda olup olmadığı ve stok durumu anlık olarak görüntülenebilir.
+Maslak Film Ekipman Takip Sistemi, film prodüksiyon şirketlerinin kamera, lens, ışık ve diğer ekipmanlarını kolayca takip edebilmesi için geliştirilmiş bir Flutter Web uygulamasıdır.
 
-🚀 Özellikler
+## 🚀 Özellikler
 
-📦 Ekipman ekleme, silme ve güncelleme
+- ✅ **Firebase Authentication** - Güvenli giriş sistemi
+- ✅ **Ekipman Yönetimi** - Ekipman ekleme, düzenleme ve silme
+- ✅ **Kiralama Takibi** - Kiralama işlemlerini takip etme
+- ✅ **Teslim Alım** - Teslim alım işlemlerini yönetme
+- ✅ **QR Kod Tarama** - Web kamerası ile QR kod okuma
+- ✅ **Müşteri Yönetimi** - Müşteri bilgilerini yönetme
+- ✅ **Çalışan Yönetimi** - Admin paneli ile çalışan yönetimi
+- ✅ **Dark Mode** - Karanlık tema desteği
+- ✅ **Responsive Tasarım** - Tüm cihazlarda çalışır
 
-👤 Kullanıcı yönetimi
+## 🧰 Teknolojiler
 
-🎥 Kiralama ve iade takibi
+- **Flutter Web** - Cross-platform web uygulaması
+- **Firebase** - Authentication ve Firestore veritabanı
+- **Mobile Scanner** - QR kod tarama
+- **Shared Preferences** - Local storage
 
-🛠️ Bakım durumlarının izlenmesi
+## 📦 Kurulum
 
-🔍 Arama ve filtreleme fonksiyonları
+```bash
+# Bağımlılıkları yükle
+flutter pub get
 
-💾 SQL veritabanı entegrasyonu
+# Web'de çalıştır
+flutter run -d chrome
 
-🧰 Teknolojiler
+# Production build
+flutter build web --release
+```
 
-C# / .NET Framework (WinForms)
+## 🚀 Deployment
 
-Microsoft SQL Server
+### Firebase Hosting
 
-Entity Framework
+```bash
+# Firebase'e deploy et
+firebase deploy --only hosting
+```
 
-Material UI Theme
+**Canlı URL:** https://maslakfilm-f479b.web.app
 
-👨‍💻 Geliştirici
+## 📱 Platform Desteği
 
-Eyüphan Polat
+- ✅ Web (Chrome, Firefox, Safari, Edge)
+- ✅ Android
+- ✅ iOS
+- ✅ Windows
+- ✅ macOS
+- ✅ Linux
+
+## 🔐 Güvenlik
+
+- Firebase Authentication ile güvenli giriş
+- Firestore Security Rules ile veri güvenliği
+- HTTPS desteği
+
+## 👨‍💻 Geliştirici
+
+**Eyüphan Polat**  
 Bilgisayar Mühendisi | Web & Yazılım Geliştirici
-📧 LinkedIn
 
+## 📄 Lisans
+
+Bu proje özel bir projedir.
+
+## 🤝 Katkıda Bulunma
+
+Pull request'ler kabul edilir. Büyük değişiklikler için lütfen önce bir issue açın.
+
+## 📧 İletişim
+
+Sorularınız için issue açabilirsiniz.
