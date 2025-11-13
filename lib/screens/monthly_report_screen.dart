@@ -576,6 +576,33 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
                                           ],
                                         ),
                                       ],
+                                      // Ekstralar / Notlar
+                                      if (rental['extras'] != null && (rental['extras'] as String).isNotEmpty) ...[
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange[900]!.withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Icon(Icons.note_outlined, size: 16, color: Colors.orange[300]),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text('Ekstralar:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.orange[300])),
+                                                    Text(rental['extras'] as String, style: const TextStyle(fontSize: 12)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),

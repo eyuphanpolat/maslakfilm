@@ -192,6 +192,16 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                                 'Planlanan Teslim: ${DateFormat('dd.MM.yyyy', 'tr_TR').format(plannedReturnDate)}',
                                 style: TextStyle(fontSize: 11, color: Colors.grey[400]),
                               ),
+                            if (data['extras'] != null && (data['extras'] as String).isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  '📝 ${data['extras'] as String}',
+                                  style: TextStyle(fontSize: 10, color: Colors.orange[300], fontStyle: FontStyle.italic),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                           ],
                         ),
                         trailing: Container(
@@ -340,6 +350,16 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                               Text(
                                 'Teslim Alım: ${DateFormat('dd.MM.yyyy HH:mm', 'tr_TR').format(actualReturnDate)}',
                                 style: TextStyle(fontSize: 11, color: Colors.orange[300]),
+                              ),
+                            if (data['extras'] != null && (data['extras'] as String).isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  '📝 ${data['extras'] as String}',
+                                  style: TextStyle(fontSize: 10, color: Colors.orange[300], fontStyle: FontStyle.italic),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                           ],
                         ),

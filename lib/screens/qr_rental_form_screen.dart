@@ -24,6 +24,7 @@ class QRRentalFormScreen extends StatefulWidget {
 
 class _QRRentalFormScreenState extends State<QRRentalFormScreen> {
   final TextEditingController _customerController = TextEditingController();
+  final TextEditingController _extrasController = TextEditingController();
   DateTime? _startDate;
   DateTime? _plannedReturnDate;
   bool _loading = false;
@@ -32,6 +33,7 @@ class _QRRentalFormScreenState extends State<QRRentalFormScreen> {
   @override
   void dispose() {
     _customerController.dispose();
+    _extrasController.dispose();
     super.dispose();
   }
 
@@ -264,6 +266,7 @@ class _QRRentalFormScreenState extends State<QRRentalFormScreen> {
         'createdAt': FieldValue.serverTimestamp(),
         if (createdByEmail != null) 'createdByEmail': createdByEmail,
         if (createdByName != null) 'createdByName': createdByName,
+        if (_extrasController.text.trim().isNotEmpty) 'extras': _extrasController.text.trim(),
       });
       
       // Her ekipmanın stokunu azalt ve status güncelle
@@ -556,6 +559,28 @@ class _QRRentalFormScreenState extends State<QRRentalFormScreen> {
                   ),
                 ),
               ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Ekstralar / Notlar',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[400],
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _extrasController,
+              decoration: const InputDecoration(
+                labelText: 'Diğer eşyalar (kablo, hafıza kartı, vb.)',
+                hintText: 'Örn: 2x HDMI kablosu, 64GB SD kart, tripod',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.note_outlined),
+                helperText: 'QR ile taranmayan ara parçalar ve ekstra notlar için',
+              ),
+              keyboardType: TextInputType.multiline,
+              maxLines: 3,
+              textCapitalization: TextCapitalization.sentences,
             ),
             const SizedBox(height: 32),
             FilledButton(

@@ -403,6 +403,58 @@ class _DeliveriesScreenState extends State<DeliveriesScreen> {
                     value: DateFormat('dd.MM.yyyy').format(plannedReturn),
                   ),
                 ],
+                if (data['extras'] != null && (data['extras'] as String).isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.orange[900]!.withValues(alpha: 0.2)
+                          : Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.note_outlined,
+                          size: 20,
+                          color: Colors.orange[700],
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Ekstralar / Notlar',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange[700],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                data['extras'] as String,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.grey[300]
+                                      : Colors.grey[800],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (actualReturn != null) ...[
                   const SizedBox(height: 8),
                   _InfoRow(
