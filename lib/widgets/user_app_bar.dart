@@ -25,9 +25,6 @@ class UserAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: isDark ? Colors.grey[900] : Colors.black,
       title: Row(
         children: [
-          // Logo (logo dosyası eklendiğinde görünecek)
-          _buildLogo('assets/images/logo_white.png', height: 28),
-          const SizedBox(width: 12),
           // Sol üstte kullanıcı adı
           StreamBuilder<DocumentSnapshot?>(
             stream: user != null

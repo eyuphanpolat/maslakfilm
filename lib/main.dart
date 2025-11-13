@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MF-ETS',
+      title: 'MaslakFilm',
       themeMode: ThemeMode.dark, // Sadece karanlık mod kullan
       darkTheme: ThemeData(
         useMaterial3: true,
@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
           systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
       ),
-      home: const AuthGate(child: MyHomePage(title: 'MF-ETS')),
+      home: const AuthGate(child: MyHomePage(title: 'MaslakFilm')),
     );
   }
 }
@@ -293,8 +293,8 @@ class _MyHomePageState extends State<MyHomePage> {
               // Logo - Ana sayfa üstünde (logo dosyası eklendiğinde görünecek)
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: _buildLogo('assets/images/logo_white.png', height: 120),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: _buildLogo('assets/images/logo_white.png', height: 250),
                 ),
               ),
               const _NotificationsSection(),

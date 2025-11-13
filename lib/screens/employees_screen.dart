@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/user_app_bar.dart';
+import 'employee_detail_screen.dart';
 
-class EmployeesScreen extends StatelessWidget {
+class EmployeesScreen extends StatefulWidget {
   const EmployeesScreen({super.key});
 
+  @override
+  State<EmployeesScreen> createState() => _EmployeesScreenState();
+}
+
+class _EmployeesScreenState extends State<EmployeesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +69,8 @@ class EmployeesScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final doc = snapshot.data!.docs[index];
               final data = doc.data() as Map<String, dynamic>;
+              final employeeName = data['name'] ?? 'İsimsiz Çalışan';
+              final employeeEmail = data['email'] as String?;
               
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -75,14 +83,14 @@ class EmployeesScreen extends StatelessWidget {
                     ),
                   ),
                   title: Text(
-                    data['name'] ?? 'İsimsiz Çalışan',
+                    employeeName,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (data['email'] != null)
-                        Text('E-posta: ${data['email']}'),
+                      if (employeeEmail != null)
+                        Text('E-posta: $employeeEmail'),
                       if (data['phone'] != null)
                         Text('Telefon: ${data['phone']}'),
                       if (data['position'] != null)
@@ -104,6 +112,18 @@ class EmployeesScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EmployeeDetailScreen(
+                          employeeId: doc.id,
+                          employeeName: employeeName,
+                          employeeEmail: employeeEmail,
+                          employeeData: data,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               );
             },
