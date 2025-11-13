@@ -17,10 +17,26 @@ class ScannerScreen extends StatefulWidget {
 
 class _ScannerScreenState extends State<ScannerScreen> {
   bool _handled = false;
+  String? _stockErrorMessage;
+  String? _equipmentName;
+
+  @override
+  void dispose() {
+    // Ekran kapanırken mesajı temizle
+    _stockErrorMessage = null;
+    super.dispose();
+  }
 
   Future<void> _handleCode(String value) async {
     if (_handled) return;
     _handled = true;
+    
+    // Önceki hata mesajını temizle
+    setState(() {
+      _stockErrorMessage = null;
+      _equipmentName = null;
+    });
+    
     try {
       DocumentSnapshot? targetDoc;
       
@@ -50,13 +66,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
           if (model.stock <= 0) {
             if (!mounted) return;
             _handled = false; // Tekrar deneme için
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('⚠️ ${model.name} - Stokta yok (Stok: ${model.stock})'),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 3),
-              ),
-            );
+            setState(() {
+              _stockErrorMessage = 'Stok Yok';
+              _equipmentName = model.name;
+            });
             return;
           }
         }
@@ -102,15 +115,84 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const UserAppBar(title: 'QR Tara'),
-      body: MobileScanner(
-        onDetect: (capture) {
-          final barcodes = capture.barcodes;
-          if (barcodes.isEmpty) return;
-          final raw = barcodes.first.rawValue;
-          if (raw != null && raw.isNotEmpty) {
-            _handleCode(raw);
-          }
-        },
+      body: Stack(
+        children: [
+          MobileScanner(
+            onDetect: (capture) {
+              final barcodes = capture.barcodes;
+              if (barcodes.isEmpty) return;
+              final raw = barcodes.first.rawValue;
+              if (raw != null && raw.isNotEmpty) {
+                _handleCode(raw);
+              }
+            },
+          ),
+          // Stok yok uyarısı (yanıp sönmeyen, sabit)
+          if (_stockErrorMessage != null)
+            Positioned(
+              top: 16,
+              left: 16,
+              right: 16,
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.red,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _stockErrorMessage!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (_equipmentName != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                _equipmentName!,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                          setState(() {
+                            _stockErrorMessage = null;
+                            _equipmentName = null;
+                            _handled = false; // Tekrar tarama yapılabilir
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

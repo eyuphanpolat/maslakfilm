@@ -64,11 +64,21 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
       final newStock = currentStock > 0 ? currentStock - 1 : 0;
       final newStatus = newStock > 0 ? widget.equipment.status : EquipmentStatus.kiralamada;
       
-      await FirebaseFirestore.instance.collection('equipment').doc(widget.equipment.id).update({
+      // Owner field'ını koru (varsa) veya varsayılan olarak 'maslakfilm' ekle (yoksa)
+      final updateData = <String, dynamic>{
         'stock': newStock,
         'status': newStatus.name,
         'currentRentalId': rentalRef.id,
-      });
+      };
+      
+      if (widget.equipment.owner != null) {
+        updateData['owner'] = widget.equipment.owner;
+      } else {
+        // Owner null ise varsayılan olarak 'maslakfilm' ekle
+        updateData['owner'] = 'maslakfilm';
+      }
+      
+      await FirebaseFirestore.instance.collection('equipment').doc(widget.equipment.id).update(updateData);
       if (!mounted) return;
       Navigator.of(context).pop();
       Navigator.of(context).pop();

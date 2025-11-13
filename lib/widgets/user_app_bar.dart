@@ -25,6 +25,9 @@ class UserAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: isDark ? Colors.grey[900] : Colors.black,
       title: Row(
         children: [
+          // Logo (logo dosyası eklendiğinde görünecek)
+          _buildLogo('assets/images/logo_white.png', height: 28),
+          const SizedBox(width: 12),
           // Sol üstte kullanıcı adı
           StreamBuilder<DocumentSnapshot?>(
             stream: user != null
@@ -129,6 +132,19 @@ class UserAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: actions,
+    );
+  }
+
+  // Logo widget'ı - logo dosyası yoksa hiçbir şey göstermez
+  Widget _buildLogo(String path, {required double height}) {
+    return Image.asset(
+      path,
+      height: height,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('Logo yüklenemedi: $path - Hata: $error');
+        return const SizedBox.shrink();
+      },
     );
   }
 }

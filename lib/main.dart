@@ -11,6 +11,7 @@ import 'screens/customers_screen.dart';
 import 'screens/equipment_list_screen.dart';
 import 'screens/employees_screen.dart';
 import 'screens/qr_action_selection_screen.dart';
+import 'screens/monthly_report_screen.dart';
 import 'widgets/user_app_bar.dart';
 import 'utils/seed_test_data.dart';
 import 'utils/migrate_qr_codes.dart';
@@ -32,41 +33,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MF-ETS',
-      themeMode: ThemeMode.system, // Otomatik olarak sistem temasını takip et
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.light(
-          brightness: Brightness.light,
-          primary: Colors.black,
-          onPrimary: Colors.white,
-          secondary: Colors.grey[800]!,
-          onSecondary: Colors.white,
-          tertiary: Colors.grey[600]!,
-          onTertiary: Colors.white,
-          error: Colors.black87,
-          onError: Colors.white,
-          surface: Colors.white,
-          onSurface: Colors.black,
-          surfaceContainerHighest: Colors.grey[100]!,
-          onSurfaceVariant: Colors.black87,
-          outline: Colors.grey[400]!,
-          outlineVariant: Colors.grey[300]!,
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle.light,
-        ),
-      ),
+      themeMode: ThemeMode.dark, // Sadece karanlık mod kullan
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.dark(
@@ -148,6 +115,19 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool _isSeeding = false;
+
+  // Logo widget'ı - logo dosyası yoksa hiçbir şey göstermez
+  Widget _buildLogo(String path, {required double height}) {
+    return Image.asset(
+      path,
+      height: height,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('Logo yüklenemedi: $path - Hata: $error');
+        return const SizedBox.shrink();
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -310,6 +290,13 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Logo - Ana sayfa üstünde (logo dosyası eklendiğinde görünecek)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: _buildLogo('assets/images/logo_white.png', height: 120),
+                ),
+              ),
               const _NotificationsSection(),
               const SizedBox(height: 24),
               Text(
@@ -346,17 +333,39 @@ class _MyHomePageState extends State<MyHomePage> {
                     isAdmin = role == 'admin' || adminFlag == true;
                   }
                   
+                  // Responsive grid: Ekran genişliğine göre sütun sayısı
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  int crossAxisCount = 3;
+                  double childAspectRatio = 0.85;
+                  
+                  if (screenWidth < 600) {
+                    // Mobil: 2 sütun
+                    crossAxisCount = 2;
+                    childAspectRatio = 0.9;
+                  } else if (screenWidth < 900) {
+                    // Tablet: 3 sütun
+                    crossAxisCount = 3;
+                    childAspectRatio = 0.85;
+                  } else {
+                    // Desktop: 3 sütun (daha geniş)
+                    crossAxisCount = 3;
+                    childAspectRatio = 0.85;
+                  }
+                  
                   return GridView.count(
-                    crossAxisCount: 2,
+                    crossAxisCount: crossAxisCount,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 1.1,
+                    childAspectRatio: childAspectRatio,
                     children: [
                       _MenuCard(
                         title: 'QR Tara',
                         icon: Icons.qr_code_scanner,
+                        color: Colors.grey,
+                        gradientStart: Colors.grey[800]!,
+                        gradientEnd: Colors.grey[900]!,
                         onTap: () {
                           debugPrint('QR Tara butonuna tıklandı - QRActionSelectionScreen açılıyor');
                           Navigator.of(context).push(
@@ -367,6 +376,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       _MenuCard(
                         title: 'Kiralama',
                         icon: Icons.assignment_outlined,
+                        color: Colors.grey,
+                        gradientStart: Colors.grey[800]!,
+                        gradientEnd: Colors.grey[900]!,
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const RentalsScreen()),
@@ -376,6 +388,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       _MenuCard(
                         title: 'Teslim Alım',
                         icon: Icons.check_circle_outline,
+                        color: Colors.grey,
+                        gradientStart: Colors.grey[800]!,
+                        gradientEnd: Colors.grey[900]!,
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const DeliveriesScreen()),
@@ -385,6 +400,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       _MenuCard(
                         title: 'Müşteriler',
                         icon: Icons.people_outline,
+                        color: Colors.grey,
+                        gradientStart: Colors.grey[800]!,
+                        gradientEnd: Colors.grey[900]!,
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const CustomersScreen()),
@@ -394,9 +412,24 @@ class _MyHomePageState extends State<MyHomePage> {
                       _MenuCard(
                         title: 'Ekipmanlar',
                         icon: Icons.camera_alt_outlined,
+                        color: Colors.grey,
+                        gradientStart: Colors.grey[800]!,
+                        gradientEnd: Colors.grey[900]!,
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const EquipmentListScreen()),
+                          );
+                        },
+                      ),
+                      _MenuCard(
+                        title: 'Aylık Rapor',
+                        icon: Icons.assessment_outlined,
+                        color: Colors.grey,
+                        gradientStart: Colors.grey[800]!,
+                        gradientEnd: Colors.grey[900]!,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const MonthlyReportScreen()),
                           );
                         },
                       ),
@@ -405,6 +438,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         _MenuCard(
                           title: 'Çalışanlar',
                           icon: Icons.badge_outlined,
+                          color: Colors.grey,
+                          gradientStart: Colors.grey[800]!,
+                          gradientEnd: Colors.grey[900]!,
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(builder: (_) => const EmployeesScreen()),
@@ -579,60 +615,90 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class _MenuCard extends StatelessWidget {
+class _MenuCard extends StatefulWidget {
   final String title;
   final IconData icon;
+  final Color color;
+  final Color gradientStart;
+  final Color gradientEnd;
   final VoidCallback onTap;
 
   const _MenuCard({
     required this.title,
     required this.icon,
+    required this.color,
+    required this.gradientStart,
+    required this.gradientEnd,
     required this.onTap,
   });
 
   @override
+  State<_MenuCard> createState() => _MenuCardState();
+}
+
+class _MenuCardState extends State<_MenuCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  size: 28,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        margin: EdgeInsets.all(_isHovered ? 2 : 0),
+        child: Card(
+          elevation: _isHovered ? 12 : 6,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.grey[900], // Gri-siyah arka plan
+                border: Border.all(
+                  color: Colors.grey[700]!,
+                  width: 1,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      size: 32,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

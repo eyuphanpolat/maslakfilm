@@ -17,6 +17,19 @@ class _SignInScreenState extends State<SignInScreen> {
   bool _obscure = true;
   bool _rememberMe = false;
 
+  // Logo widget'ı - logo dosyası yoksa fallback gösterir
+  Widget _buildLogo(String path, {required double height, required Widget fallback}) {
+    return Image.asset(
+      path,
+      height: height,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('Logo yüklenemedi: $path - Hata: $error');
+        return fallback;
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -94,83 +107,104 @@ class _SignInScreenState extends State<SignInScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              margin: const EdgeInsets.all(24),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 6,
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.movie_filter, color: theme.colorScheme.primary, size: 32),
-                        const SizedBox(width: 8),
-                        Text('MF-ETS', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text('Maslak Film Ekipman Takip', textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'E-posta', prefixIcon: Icon(Icons.email)),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'Şifre',
-                        prefixIcon: const Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          onPressed: () => setState(() => _obscure = !_obscure),
-                          icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+        child: Stack(
+          children: [
+            // Logo - Üst orta kısım
+            Positioned(
+              top: 40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: _buildLogo(
+                  'assets/images/logo_white.png',
+                  height: 200,
+                  fallback: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.movie_filter, color: theme.colorScheme.primary, size: 48),
+                      const SizedBox(width: 8),
+                      Text(
+                        'MF-ETS',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
                         ),
                       ),
-                      obscureText: _obscure,
-                    ),
-                    const SizedBox(height: 8),
-                    // Beni Hatırla checkbox'ı
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _rememberMe,
-                          onChanged: (value) {
-                            setState(() {
-                              _rememberMe = value ?? false;
-                            });
-                          },
-                        ),
-                        const Text('Beni Hatırla'),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    if (_error != null)
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: _loading ? null : _signIn,
-                      child: _loading
-                          ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text('Giriş Yap'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _loading ? null : () => _resetPassword(context),
-                      child: const Text('Şifremi Unuttum'),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
+            // Giriş kartı
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Card(
+                  margin: const EdgeInsets.all(24),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 6,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(labelText: 'E-posta', prefixIcon: Icon(Icons.email)),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _passwordController,
+                          decoration: InputDecoration(
+                            labelText: 'Şifre',
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(() => _obscure = !_obscure),
+                              icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                            ),
+                          ),
+                          obscureText: _obscure,
+                        ),
+                        const SizedBox(height: 8),
+                        // Beni Hatırla checkbox'ı
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: _rememberMe,
+                              onChanged: (value) {
+                                setState(() {
+                                  _rememberMe = value ?? false;
+                                });
+                              },
+                            ),
+                            const Text('Beni Hatırla'),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (_error != null)
+                          Text(_error!, style: const TextStyle(color: Colors.red)),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: _loading ? null : _signIn,
+                          child: _loading
+                              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Text('Giriş Yap'),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _loading ? null : () => _resetPassword(context),
+                          child: const Text('Şifremi Unuttum'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

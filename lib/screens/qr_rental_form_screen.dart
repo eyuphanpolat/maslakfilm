@@ -80,16 +80,9 @@ class _QRRentalFormScreenState extends State<QRRentalFormScreen> {
 
     if (result != null && mounted) {
       // Stok kontrolü (ekstra güvenlik için)
-      if (result.stock <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('⚠️ ${result.name} - Stokta yok (Stok: ${result.stock})'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-        return;
-      }
+      // Not: ScannerScreen'de zaten stok kontrolü yapılıyor ve mesaj gösteriliyor
+      // Burada ekstra kontrol yapmaya gerek yok çünkü result null dönmez
+      // Eğer stok yoksa ScannerScreen'de mesaj gösteriliyor ve result null döner
 
       // Sonuç döndüğünde equipment'i güncellemek için yeni bir widget'a geçiş yap
       Navigator.of(context).pushReplacement(
@@ -280,11 +273,23 @@ class _QRRentalFormScreenState extends State<QRRentalFormScreen> {
         final newStatus = newStock > 0 ? equipment.status : EquipmentStatus.kiralamada;
         
         final equipmentRef = FirebaseFirestore.instance.collection('equipment').doc(equipment.id);
-        batch.update(equipmentRef, {
+        
+        // Owner field'ını koru (varsa)
+        final updateData = <String, dynamic>{
           'stock': newStock,
           'status': newStatus.name,
           'currentRentalId': rentalRef.id,
-        });
+        };
+        
+        // Owner field'ını koru (varsa) veya varsayılan olarak 'maslakfilm' ekle (yoksa)
+        if (equipment.owner != null) {
+          updateData['owner'] = equipment.owner;
+        } else {
+          // Owner null ise varsayılan olarak 'maslakfilm' ekle
+          updateData['owner'] = 'maslakfilm';
+        }
+        
+        batch.update(equipmentRef, updateData);
       }
       
       // Tüm işlemleri toplu olarak kaydet

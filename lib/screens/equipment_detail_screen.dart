@@ -170,7 +170,7 @@ class _EquipmentDetailScreenState extends State<EquipmentDetailScreen> {
                 Icon(
                   Icons.inventory_2,
                   size: 18,
-                  color: Colors.grey[700],
+                  color: Colors.grey[400],
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -246,7 +246,10 @@ class _EquipmentDetailScreenState extends State<EquipmentDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Kiralama Bilgileri', style: Theme.of(context).textTheme.titleMedium),
+                          Text('Aktif Kiralama', style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          )),
                           const SizedBox(height: 8),
                           Text('Müşteri: ${rental['customerName'] ?? 'Bilinmiyor'}'),
                           if (startDate != null) Text('Başlangıç: ${DateFormat('dd.MM.yyyy').format(startDate)}'),
@@ -258,6 +261,224 @@ class _EquipmentDetailScreenState extends State<EquipmentDetailScreen> {
                   );
                 },
               ),
+            const SizedBox(height: 24),
+            // Kiralama Geçmişi Bölümü
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.history, size: 24, color: Colors.grey[300]),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Kiralama Geçmişi',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('rentals')
+                          .orderBy('startDate', descending: true)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          debugPrint('Kiralama geçmişi hatası: ${snapshot.error}');
+                          return Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              'Kiralama geçmişi yüklenirken hata oluştu',
+                              style: TextStyle(color: Colors.red[300]),
+                            ),
+                          );
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text('Kiralama geçmişi yok'),
+                          );
+                        }
+
+                        // Memory'de filtreleme: Bu ekipmanla ilgili tüm kiralama kayıtlarını bul
+                        final allRentals = snapshot.data!.docs;
+                        final equipmentRentals = allRentals.where((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          
+                          // equipmentId kontrolü (tek ekipman - geriye dönük uyumluluk)
+                          final equipmentId = data['equipmentId'] as String?;
+                          if (equipmentId == e.id) return true;
+                          
+                          // equipmentIds kontrolü (çoklu ekipman)
+                          final equipmentIds = data['equipmentIds'] as List<dynamic>?;
+                          if (equipmentIds != null && equipmentIds.contains(e.id)) {
+                            return true;
+                          }
+                          
+                          return false;
+                        }).toList();
+
+                        if (equipmentRentals.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text('Bu ekipman için kiralama geçmişi yok'),
+                          );
+                        }
+
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: equipmentRentals.length,
+                          itemBuilder: (context, index) {
+                            final doc = equipmentRentals[index];
+                            final data = doc.data() as Map<String, dynamic>;
+                            
+                            final startDate = (data['startDate'] as Timestamp?)?.toDate();
+                            final plannedReturn = (data['plannedReturnDate'] as Timestamp?)?.toDate();
+                            final actualReturn = (data['actualReturnDate'] as Timestamp?)?.toDate();
+                            final status = data['status'] as String? ?? 'bilinmiyor';
+                            final customerName = data['customerName'] as String? ?? 'Bilinmiyor';
+                            final isActive = status == 'aktif';
+                            final isCompleted = status == 'tamamlandi' || status == 'tamamlandı';
+                            
+                            // Aktif kiralama ise ve currentRentalId ile eşleşiyorsa, zaten üstte gösteriliyor, burada gösterme
+                            if (isActive && doc.id == e.currentRentalId) {
+                              return const SizedBox.shrink();
+                            }
+                            
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              color: isActive 
+                                  ? Colors.grey[800] 
+                                  : isCompleted 
+                                      ? Colors.grey[800] 
+                                      : Colors.grey[800],
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            customerName,
+                                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Chip(
+                                          label: Text(
+                                            isActive 
+                                                ? 'Aktif' 
+                                                : isCompleted 
+                                                    ? 'Tamamlandı' 
+                                                    : status,
+                                            style: const TextStyle(fontSize: 11),
+                                          ),
+                                          backgroundColor: isActive 
+                                              ? Colors.grey[700] 
+                                              : isCompleted 
+                                                  ? Colors.grey[700] 
+                                                  : Colors.grey[700],
+                                          labelStyle: TextStyle(
+                                            color: isActive 
+                                                ? Colors.white 
+                                                : isCompleted 
+                                                    ? Colors.white 
+                                                    : Colors.white70,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    if (startDate != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.calendar_today, size: 14, color: Colors.grey[400]),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Başlangıç: ${DateFormat('dd.MM.yyyy').format(startDate)}',
+                                              style: Theme.of(context).textTheme.bodyMedium,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    if (plannedReturn != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.event, size: 14, color: Colors.grey[400]),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Planlanan Dönüş: ${DateFormat('dd.MM.yyyy').format(plannedReturn)}',
+                                              style: Theme.of(context).textTheme.bodyMedium,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    if (actualReturn != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.check_circle, size: 14, color: Colors.grey[300]),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Dönüş: ${DateFormat('dd.MM.yyyy').format(actualReturn)}',
+                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                color: Colors.grey[300],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    if (data['price'] != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.attach_money, size: 14, color: Colors.grey[400]),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Fiyat: ${data['price']} TL',
+                                              style: Theme.of(context).textTheme.bodyMedium,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
             // Admin için silme butonu
             StreamBuilder<DocumentSnapshot?>(

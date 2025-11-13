@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -131,12 +132,23 @@ class _QRDeliveryFormScreenState extends State<QRDeliveryFormScreen> {
       // Ekipman stokunu artır ve ofiste olarak işaretle
       final equipmentDoc = await FirebaseFirestore.instance.collection('equipment').doc(widget.equipment!.id).get();
       final currentStock = equipmentDoc.data()?['stock'] as int? ?? 0;
+      final currentOwner = equipmentDoc.data()?['owner'] as String?;
       
-      await FirebaseFirestore.instance.collection('equipment').doc(widget.equipment!.id).update({
+      // Owner field'ını koru (varsa) veya varsayılan olarak 'maslakfilm' ekle (yoksa)
+      final updateData = <String, dynamic>{
         'stock': currentStock + 1,
         'status': currentStock + 1 > 0 ? 'ofiste' : widget.equipment!.status.name,
         'currentRentalId': null,
-      });
+      };
+      
+      if (currentOwner != null) {
+        updateData['owner'] = currentOwner;
+      } else {
+        // Owner null ise varsayılan olarak 'maslakfilm' ekle
+        updateData['owner'] = 'maslakfilm';
+      }
+      
+      await FirebaseFirestore.instance.collection('equipment').doc(widget.equipment!.id).update(updateData);
 
       if (!mounted) return;
 

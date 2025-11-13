@@ -47,16 +47,16 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'Google API Key',
-    appId: 'FİREBASE APP İD ',
+    apiKey: 'AIzaSyDouH4_UpJ2EDbWsmwZtkrUGsQ-7mO1V5k',
+    appId: '1:722338354655:android:b58f8396178fefd183a06a',
     messagingSenderId: '722338354655',
     projectId: 'maslakfilm-f479b',
     storageBucket: 'maslakfilm-f479b.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'Google API Key',
-    appId: 'FİREBASE APP İD ',
+    apiKey: 'AIzaSyCe4Re_V4fuINZVjCTQw5R6QE_0H98sfW8',
+    appId: '1:722338354655:ios:676f0b9887afc39283a06a',
     messagingSenderId: '722338354655',
     projectId: 'maslakfilm-f479b',
     storageBucket: 'maslakfilm-f479b.firebasestorage.app',
@@ -64,8 +64,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'Google API Key',
-    appId: 'FİREBASE APP İD ',
+    apiKey: 'AIzaSyDouH4_UpJ2EDbWsmwZtkrUGsQ-7mO1V5k',
+    appId: '1:722338354655:web:61c2eabb44067dea83a06a',
     messagingSenderId: '722338354655',
     projectId: 'maslakfilm-f479b',
     authDomain: 'maslakfilm-f479b.firebaseapp.com',

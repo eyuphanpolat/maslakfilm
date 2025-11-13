@@ -6,11 +6,22 @@ import '../models/equipment_model.dart';
 import 'equipment_detail_screen.dart';
 import 'scanner_screen.dart';
 
-class EquipmentListScreen extends StatelessWidget {
+class EquipmentListScreen extends StatefulWidget {
   const EquipmentListScreen({super.key});
 
   @override
+  State<EquipmentListScreen> createState() => _EquipmentListScreenState();
+}
+
+class _EquipmentListScreenState extends State<EquipmentListScreen> {
+  String selectedFilter = 'tumu'; // 'tumu', 'maslakfilm', 'ortak'
+
+  @override
   Widget build(BuildContext context) {
+    // Filtreye göre query oluştur
+    // NOT: where + orderBy için Firestore index gerekir, bu yüzden memory'de filtreleme yapıyoruz
+    Query query = FirebaseFirestore.instance.collection('equipment').orderBy('name');
+
     return Scaffold(
       appBar: const UserAppBar(title: 'Ekipmanlar'),
       floatingActionButton: Column(
@@ -19,7 +30,7 @@ class EquipmentListScreen extends StatelessWidget {
         children: [
           FloatingActionButton(
             heroTag: 'add_equipment',
-            onPressed: () => showAddEquipmentDialog(context),
+            onPressed: () => _AddEquipmentDialog.show(context),
             tooltip: 'Ekipman Ekle',
             child: const Icon(Icons.add),
           ),
@@ -36,261 +47,379 @@ class EquipmentListScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('equipment')
-            .orderBy('name')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          // Filtreleme seçenekleri
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'tumu', label: Text('Tümü')),
+                ButtonSegment(value: 'maslakfilm', label: Text('Maslak Film')),
+                ButtonSegment(value: 'ortak', label: Text('Ortak')),
+              ],
+              selected: {selectedFilter},
+              onSelectionChanged: (Set<String> newSelection) {
+                setState(() {
+                  selectedFilter = newSelection.first;
+                });
+              },
+            ),
+          ),
+          // Ekipman listesi
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: query.snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          if (snapshot.hasError) {
-            return const Center(child: Text('Veri yüklenirken bir sorun oluştu'));
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Henüz ekipman yok',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Yeni ekipman eklemek için + butonuna tıklayın',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return StreamBuilder<DocumentSnapshot?>(
-            stream: FirebaseAuth.instance.currentUser != null
-                ? FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(FirebaseAuth.instance.currentUser!.uid)
-                    .snapshots()
-                : null,
-            builder: (context, adminSnapshot) {
-              // Admin kontrolü
-              bool isAdmin = false;
-              final user = FirebaseAuth.instance.currentUser;
-              
-              final adminEmails = ['polathakki@gmail.com', 'eyuphanpolatt@gmail.com'];
-              final userEmail = user?.email?.toLowerCase().trim();
-              if (userEmail != null && adminEmails.contains(userEmail)) {
-                isAdmin = true;
-              }
-              
-              if (!isAdmin && adminSnapshot.hasData && adminSnapshot.data!.exists) {
-                final data = adminSnapshot.data!.data() as Map<String, dynamic>?;
-                final role = data?['role'] as String?;
-                final adminFlag = data?['isAdmin'] as bool?;
-                isAdmin = role == 'admin' || adminFlag == true;
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) {
-                  final doc = snapshot.data!.docs[index];
-                  final equipment = EquipmentModel.fromSnapshot(doc);
-                  
-                  Future<void> deleteEquipment() async {
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Ekipmanı Sil'),
-                        content: Text(
-                          '${equipment.name} ekipmanını silmek istediğinizden emin misiniz?\n\n'
-                          'Bu işlem geri alınamaz!',
+                if (snapshot.hasError) {
+                  debugPrint('Equipment list error: ${snapshot.error}');
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red,
                         ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('İptal'),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Veri yüklenirken bir sorun oluştu',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.red,
                           ),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                            child: const Text('Sil'),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Hata: ${snapshot.error}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[600],
                           ),
-                        ],
-                      ),
-                    );
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-                    if (confirmed == true && context.mounted) {
-                      try {
-                        await FirebaseFirestore.instance
-                            .collection('equipment')
-                            .doc(equipment.id)
-                            .delete();
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.camera_alt_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Henüz ekipman yok',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Yeni ekipman eklemek için + butonuna tıklayın',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ekipman silindi'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Hata: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
+                // Memory'de filtreleme yap (Firestore index hatası olmaması için)
+                final allDocs = snapshot.data!.docs;
+                final filteredDocs = selectedFilter == 'tumu'
+                    ? allDocs // Tümü filtresinde tüm ekipmanları göster (owner null olsa bile)
+                    : allDocs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>?;
+                        final owner = data?['owner'] as String?;
+                        // Owner null ise varsayılan olarak 'maslakfilm' kabul et
+                        final effectiveOwner = owner ?? 'maslakfilm';
+                        return effectiveOwner == selectedFilter;
+                      }).toList();
+
+                if (filteredDocs.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.filter_list_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Filtreye uygun ekipman bulunamadı',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          selectedFilter == 'maslakfilm'
+                              ? 'Maslak Film ekipmanı yok'
+                              : 'Ortak ekipman yok',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return StreamBuilder<DocumentSnapshot?>(
+                  stream: FirebaseAuth.instance.currentUser != null
+                      ? FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(FirebaseAuth.instance.currentUser!.uid)
+                          .snapshots()
+                      : null,
+                  builder: (context, adminSnapshot) {
+                    // Admin kontrolü
+                    bool isAdmin = false;
+                    final user = FirebaseAuth.instance.currentUser;
+                    
+                    final adminEmails = ['polathakki@gmail.com', 'eyuphanpolatt@gmail.com'];
+                    final userEmail = user?.email?.toLowerCase().trim();
+                    if (userEmail != null && adminEmails.contains(userEmail)) {
+                      isAdmin = true;
                     }
-                  }
-                  
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => EquipmentDetailScreen(equipment: equipment),
-                          ),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: equipment.status == EquipmentStatus.kiralamada
-                                    ? Colors.orange[100]
-                                    : Colors.green[100],
-                                borderRadius: BorderRadius.circular(12),
+                    
+                    if (!isAdmin && adminSnapshot.hasData && adminSnapshot.data!.exists) {
+                      final data = adminSnapshot.data!.data() as Map<String, dynamic>?;
+                      final role = data?['role'] as String?;
+                      final adminFlag = data?['isAdmin'] as bool?;
+                      isAdmin = role == 'admin' || adminFlag == true;
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemCount: filteredDocs.length,
+                      itemBuilder: (context, index) {
+                        final doc = filteredDocs[index];
+                        final equipment = EquipmentModel.fromSnapshot(doc);
+                        
+                        Future<void> deleteEquipment() async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Ekipmanı Sil'),
+                              content: Text(
+                                '${equipment.name} ekipmanını silmek istediğinizden emin misiniz?\n\n'
+                                'Bu işlem geri alınamaz!',
                               ),
-                              child: Icon(
-                                Icons.camera_alt,
-                                color: equipment.status == EquipmentStatus.kiralamada
-                                    ? Colors.orange[900]
-                                    : Colors.green[900],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          equipment.name,
-                                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      if (isAdmin) ...[
-                                        const SizedBox(width: 8),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                          onPressed: () {
-                                            deleteEquipment();
-                                          },
-                                          tooltip: 'Sil',
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                        ),
-                                      ],
-                                    ],
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('İptal'),
+                                ),
+                                FilledButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: Colors.red,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    equipment.category,
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: Colors.grey[600],
+                                  child: const Text('Sil'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirmed == true && context.mounted) {
+                            try {
+                              await FirebaseFirestore.instance
+                                  .collection('equipment')
+                                  .doc(equipment.id)
+                                  .delete();
+
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Ekipman silindi'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Hata: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          }
+                        }
+                        
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => EquipmentDetailScreen(equipment: equipment),
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 56,
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      color: equipment.status == EquipmentStatus.kiralamada
+                                          ? Colors.orange[100]
+                                          : Colors.green[100],
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.camera_alt,
+                                      color: equipment.status == EquipmentStatus.kiralamada
+                                          ? Colors.orange[900]
+                                          : Colors.green[900],
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.inventory_2,
-                                        size: 14,
-                                        color: Colors.grey[600],
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Stok: ${equipment.stock}',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          color: Colors.grey[600],
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                equipment.name,
+                                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            if (isAdmin) ...[
+                                              const SizedBox(width: 8),
+                                              IconButton(
+                                                icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                                onPressed: () {
+                                                  deleteEquipment();
+                                                },
+                                                tooltip: 'Sil',
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
+                                              ),
+                                            ],
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              equipment.category,
+                                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                            if (equipment.owner != null) ...[
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: equipment.owner == 'maslakfilm'
+                                                      ? Colors.blue[100]
+                                                      : Colors.green[100],
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  equipment.owner == 'maslakfilm' ? 'Maslak Film' : 'Ortak',
+                                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                    color: equipment.owner == 'maslakfilm'
+                                                        ? Colors.blue[900]
+                                                        : Colors.green[900],
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.inventory_2,
+                                              size: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Stok: ${equipment.stock}',
+                                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Chip(
+                                    label: Text(
+                                      equipment.status == EquipmentStatus.kiralamada
+                                          ? 'Kiralamada'
+                                          : 'Ofiste',
+                                    ),
+                                    backgroundColor: equipment.status == EquipmentStatus.kiralamada
+                                        ? Colors.orange[100]
+                                        : Colors.green[100],
+                                    labelStyle: TextStyle(
+                                      color: equipment.status == EquipmentStatus.kiralamada
+                                          ? Colors.orange[900]
+                                          : Colors.green[900],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                            Chip(
-                              label: Text(
-                                equipment.status == EquipmentStatus.kiralamada
-                                    ? 'Kiralamada'
-                                    : 'Ofiste',
-                              ),
-                              backgroundColor: equipment.status == EquipmentStatus.kiralamada
-                                  ? Colors.orange[100]
-                                  : Colors.green[100],
-                              labelStyle: TextStyle(
-                                color: equipment.status == EquipmentStatus.kiralamada
-                                    ? Colors.orange[900]
-                                    : Colors.green[900],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
-  static void showAddEquipmentDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => _AddEquipmentDialog(),
     );
   }
 }
 
 class _AddEquipmentDialog extends StatefulWidget {
   const _AddEquipmentDialog();
+
+  static void show(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const _AddEquipmentDialog(),
+    );
+  }
 
   @override
   State<_AddEquipmentDialog> createState() => _AddEquipmentDialogState();
@@ -300,6 +429,7 @@ class _AddEquipmentDialogState extends State<_AddEquipmentDialog> {
   final nameController = TextEditingController();
   final stockController = TextEditingController(text: '1');
   String selectedCategory = 'Kamera';
+  String selectedOwner = 'maslakfilm'; // Varsayılan: Maslak Film
 
   static const List<String> categories = [
     'Kamera',
@@ -369,6 +499,31 @@ class _AddEquipmentDialogState extends State<_AddEquipmentDialog> {
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.next,
             ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: selectedOwner,
+              decoration: const InputDecoration(
+                labelText: 'Sahip',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'maslakfilm',
+                  child: Text('Maslak Film'),
+                ),
+                DropdownMenuItem(
+                  value: 'ortak',
+                  child: Text('Ortak'),
+                ),
+              ],
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    selectedOwner = newValue;
+                  });
+                }
+              },
+            ),
           ],
         ),
       ),
@@ -437,6 +592,7 @@ class _AddEquipmentDialogState extends State<_AddEquipmentDialog> {
                 'stock': stock,
                 'currentRentalId': null,
                 'imageUrl': null,
+                'owner': selectedOwner, // 'maslakfilm' veya 'ortak'
                 'createdAt': FieldValue.serverTimestamp(),
               });
               

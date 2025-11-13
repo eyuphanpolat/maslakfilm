@@ -18,6 +18,7 @@ class EquipmentModel {
   final String? imageUrl; // Ekipman fotoğrafı
   final String? currentRentalId; // Eğer kiralamadaysa, ilgili kira ID'si
   final int stock; // Stok miktarı
+  final String? owner; // 'maslakfilm' veya 'ortak'
 
   EquipmentModel({
     required this.id,
@@ -29,6 +30,7 @@ class EquipmentModel {
     this.imageUrl,
     this.currentRentalId,
     this.stock = 1, // Varsayılan olarak 1
+    this.owner, // Varsayılan null (eski veriler için)
   });
 
   // === Firestore'dan Veri Okuma (JSON -> Model) ===
@@ -60,6 +62,7 @@ class EquipmentModel {
       imageUrl: data['imageUrl'],
       currentRentalId: data['currentRentalId'],
       stock: data['stock'] as int? ?? 1,
+      owner: data['owner'] as String?, // 'maslakfilm' veya 'ortak'
     );
   }
 
@@ -74,6 +77,7 @@ class EquipmentModel {
       'imageUrl': imageUrl,
       'currentRentalId': currentRentalId,
       'stock': stock,
+      'owner': owner, // 'maslakfilm' veya 'ortak'
     };
   }
 }

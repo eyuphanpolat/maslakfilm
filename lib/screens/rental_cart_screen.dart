@@ -33,19 +33,9 @@ class _RentalCartScreenState extends State<RentalCartScreen> {
     );
 
     if (result != null && mounted) {
-      // Stok kontrolü
-      if (result.stock <= 0) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('⚠️ ${result.name} - Stokta yok (Stok: ${result.stock})'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
-        return;
-      }
+      // Stok kontrolü ScannerScreen'de yapılıyor
+      // Eğer stok yoksa ScannerScreen'de mesaj gösteriliyor ve result null döner
+      // Burada ekstra kontrol yapmaya gerek yok
 
       // Aynı ekipman zaten sepette var mı kontrol et
       final exists = _cartItems.any((item) => item.id == result.id);
