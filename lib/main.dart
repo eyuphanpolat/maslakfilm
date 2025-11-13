@@ -13,7 +13,6 @@ import 'screens/employees_screen.dart';
 import 'screens/qr_action_selection_screen.dart';
 import 'screens/monthly_report_screen.dart';
 import 'widgets/user_app_bar.dart';
-import 'utils/seed_test_data.dart';
 import 'utils/migrate_qr_codes.dart';
 import 'services/notification_service.dart';
 
@@ -114,7 +113,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  bool _isSeeding = false;
 
   // Logo widget'ı - logo dosyası yoksa hiçbir şey göstermez
   Widget _buildLogo(String path, {required double height}) {
@@ -132,7 +130,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _autoSeedData();
     _makeEmailsAdminOnStartup();
     _migrateQRCodes();
   }
@@ -213,44 +210,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _autoSeedData() async {
-    // Ekipman verisi var mı kontrol et
-    try {
-      final equipmentSnapshot = await FirebaseFirestore.instance
-          .collection('equipment')
-          .limit(1)
-          .get();
-
-      if (equipmentSnapshot.docs.isEmpty) {
-        // Veri yoksa otomatik ekle
-        setState(() {
-          _isSeeding = true;
-        });
-        
-        await SeedTestData.seedAll();
-        
-        if (mounted) {
-          setState(() {
-            _isSeeding = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Test verileri otomatik olarak eklendi!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isSeeding = false;
-        });
-      }
-      debugPrint('Test verisi ekleme hatası: $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -260,21 +219,6 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: UserAppBar(
         title: widget.title,
         actions: [
-          if (_isSeeding)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
-            IconButton(
-              onPressed: () => _showSeedDataDialog(context),
-              icon: const Icon(Icons.data_usage),
-              tooltip: 'Test Verileri',
-            ),
           IconButton(
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
@@ -467,152 +411,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _showSeedDataDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Test Verileri'),
-        content: const Text(
-          'Firebase\'e örnek test verileri eklemek istiyor musunuz?\n\n'
-          'Eklenecek veriler:\n'
-          '• 10 Ekipman\n'
-          '• 5 Müşteri\n'
-          '• 4 Çalışan\n'
-          '• 3 Kiralama (2 aktif, 1 tamamlanmış)',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              _seedTestData(context);
-            },
-            child: const Text('Ekle'),
-          ),
-          OutlinedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              _clearTestData(context);
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: const Text('Temizle'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _seedTestData(BuildContext context) async {
-    // Loading göster
-    if (!context.mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 20),
-            Text('Test verileri ekleniyor...'),
-          ],
-        ),
-      ),
-    );
-
-    try {
-      // Force true ile ekle (mevcut verileri temizleyip yeniden ekle)
-      await SeedTestData.seedAll(force: true);
-      if (!context.mounted) return;
-      Navigator.pop(context); // Loading dialog'u kapat
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Test verileri başarıyla eklendi!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      Navigator.pop(context); // Loading dialog'u kapat
-      
-      // Hata sessizce log edilir
-      debugPrint('Test verisi ekleme hatası: $e');
-    }
-  }
-
-  Future<void> _clearTestData(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Verileri Temizle'),
-        content: const Text(
-          'Tüm test verilerini silmek istediğinizden emin misiniz?\n\n'
-          'Bu işlem geri alınamaz!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Temizle'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      if (!context.mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text('Veriler temizleniyor...'),
-            ],
-          ),
-        ),
-      );
-
-      try {
-        await SeedTestData.clearAll();
-        if (!context.mounted) return;
-        Navigator.pop(context); // Loading dialog'u kapat
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Tüm test verileri temizlendi!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      } catch (e) {
-        if (!context.mounted) return;
-        Navigator.pop(context); // Loading dialog'u kapat
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Hata: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    }
-  }
 }
 
 class _MenuCard extends StatefulWidget {

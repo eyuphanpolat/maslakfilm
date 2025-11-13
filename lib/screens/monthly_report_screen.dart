@@ -82,8 +82,9 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
             final eqId = equipmentIds[i] as String;
             final eqName = i < names.length ? names[i] : equipmentName ?? 'Bilinmeyen';
             
-            // Ekipman sahibi bilgisini çek
+            // Ekipman sahibi bilgisini çek ve silinmiş mi kontrol et
             String? owner = 'maslakfilm'; // Varsayılan
+            bool isDeleted = false;
             try {
               final eqDoc = await FirebaseFirestore.instance
                   .collection('equipment')
@@ -93,9 +94,14 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
               if (eqDoc.exists) {
                 final eqData = eqDoc.data();
                 owner = eqData?['owner'] as String? ?? 'maslakfilm';
+              } else {
+                // Ekipman silinmiş
+                isDeleted = true;
               }
             } catch (e) {
               debugPrint('Ekipman sahibi bilgisi alınamadı: $e');
+              // Hata durumunda da silinmiş olabilir
+              isDeleted = true;
             }
 
             rentals.add({
@@ -110,6 +116,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
               'status': data['status'] ?? 'aktif',
               'location': data['location'],
               'owner': owner,
+              'isDeleted': isDeleted,
               'createdByName': data['createdByName'],
               'createdByEmail': data['createdByEmail'],
               'returnedByName': data['returnedByName'],
@@ -119,6 +126,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
         } else if (equipmentId != null) {
           // Tek ekipman
           String? owner = 'maslakfilm'; // Varsayılan
+          bool isDeleted = false;
           try {
             final eqDoc = await FirebaseFirestore.instance
                 .collection('equipment')
@@ -128,9 +136,14 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
             if (eqDoc.exists) {
               final eqData = eqDoc.data();
               owner = eqData?['owner'] as String? ?? 'maslakfilm';
+            } else {
+              // Ekipman silinmiş
+              isDeleted = true;
             }
           } catch (e) {
             debugPrint('Ekipman sahibi bilgisi alınamadı: $e');
+            // Hata durumunda da silinmiş olabilir
+            isDeleted = true;
           }
 
           rentals.add({
@@ -145,6 +158,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
             'status': data['status'] ?? 'aktif',
             'location': data['location'],
             'owner': owner,
+            'isDeleted': isDeleted,
             'createdByName': data['createdByName'],
             'createdByEmail': data['createdByEmail'],
             'returnedByName': data['returnedByName'],
@@ -225,10 +239,15 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
         final returnedByEmail = rental['returnedByEmail']?.toString();
         final returnedByDisplay = returnedByName ?? returnedByEmail ?? '';
         
+        // Ekipman silinmişse adının yanına "silindi" ekle
+        final equipmentName = rental['equipmentName']?.toString() ?? '';
+        final isDeleted = rental['isDeleted'] as bool? ?? false;
+        final equipmentNameDisplay = isDeleted ? '$equipmentName (silindi)' : equipmentName;
+        
         sheet.appendRow([
           TextCellValue(startDate != null ? DateFormat('dd.MM.yyyy').format(startDate) : ''),
           TextCellValue(rental['customerName']?.toString() ?? ''),
-          TextCellValue(rental['equipmentName']?.toString() ?? ''),
+          TextCellValue(equipmentNameDisplay),
           TextCellValue(ownerDisplay),
           TextCellValue(startDate != null ? DateFormat('dd.MM.yyyy').format(startDate) : ''),
           TextCellValue(plannedReturn != null ? DateFormat('dd.MM.yyyy').format(plannedReturn) : ''),
@@ -472,12 +491,37 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
                                       Row(
                                         children: [
                                           Expanded(
-                                            child: Text(
-                                              rental['equipmentName'] ?? 'Bilinmeyen',
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                            child: Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    rental['equipmentName'] ?? 'Bilinmeyen',
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (rental['isDeleted'] as bool? ?? false)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(left: 8),
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.red.withOpacity(0.2),
+                                                        borderRadius: BorderRadius.circular(4),
+                                                      ),
+                                                      child: const Text(
+                                                        'silindi',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          color: Colors.red,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
                                             ),
                                           ),
                                           Chip(

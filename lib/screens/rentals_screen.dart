@@ -66,6 +66,36 @@ class _RentalsScreenState extends State<RentalsScreen> {
     return equipmentNames.first;
   }
 
+  // Ekipman silinmiş mi kontrol et
+  Future<bool> _checkEquipmentDeleted(Map<String, dynamic> data) async {
+    try {
+      final equipmentId = data['equipmentId'] as String?;
+      final equipmentIds = data['equipmentIds'] as List<dynamic>?;
+      
+      // İlk ekipman ID'sini kontrol et (gösterilen ekipman)
+      String? idToCheck;
+      if (equipmentIds != null && equipmentIds.isNotEmpty) {
+        idToCheck = equipmentIds[0] as String?;
+      } else if (equipmentId != null) {
+        idToCheck = equipmentId;
+      }
+      
+      if (idToCheck == null) {
+        return false;
+      }
+      
+      final eqDoc = await FirebaseFirestore.instance
+          .collection('equipment')
+          .doc(idToCheck)
+          .get();
+      
+      return !eqDoc.exists;
+    } catch (e) {
+      debugPrint('Ekipman silinmiş kontrolü hatası: $e');
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -364,11 +394,42 @@ class _RentalsScreenState extends State<RentalsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _getEquipmentDisplayName(data),
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                            FutureBuilder<bool>(
+                              future: _checkEquipmentDeleted(data),
+                              builder: (context, snapshot) {
+                                final isDeleted = snapshot.data ?? false;
+                                return Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        _getEquipmentDisplayName(data),
+                                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ),
+                                    if (isDeleted)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: const Text(
+                                            'silindi',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              },
                             ),
                             // Çoklu ekipman varsa tümünü göster
                             if (_hasMultipleEquipment(data)) ...[
